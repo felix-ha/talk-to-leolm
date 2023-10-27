@@ -71,6 +71,6 @@ if st.button('Stelle Frage'):
           with st.spinner('LLM denkt...'):
               result = ask_model(url_server, route_model, question, context)
               answer = result['answer'][0]['generated_text'].split('<|im_start|>assistant')[1]
-              st.text_area(f'Antwort (dauerte {result["inference_time_seconds"]:.2f} Sekunden)', answer)
+              st.text_area(f'Antwort (dauerte {result["inference_time_seconds"]:.2f} Sekunden)', answer, height=250)
     else:
       st.warning('LLM ist offline, keine Antwort möglich!', icon="⚠️")
