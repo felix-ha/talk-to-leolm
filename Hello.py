@@ -29,7 +29,7 @@ def ask_model(url_server: str, route_check:str, route_model: str, question: str,
         response = requests.post(f'{url_server}/{route_model}', data=json.dumps(payload), headers=headers)
         response = response.json()
         prompt_history = response['answer'][0]['generated_text']
-        answer = prompt_history.split('<|im_start|>assistant')[1].lstrip()
+        answer = prompt_history.split('<|im_start|>assistant')[-1].lstrip()
         return answer, prompt_history
     else:
         return "LLM ist offline!", None
