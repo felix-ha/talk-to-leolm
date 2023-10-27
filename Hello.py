@@ -22,55 +22,46 @@ def server_is_online(url_server: str, route_check:str) -> bool:
     except requests.exceptions.ConnectionError:
       return False
     
-def ask_model(url_server: str, route_model: str, question: str, context: str):
-    payload = {'question': question, 'context': context}
-    headers = {'content-type': 'application/json'}
-    response = requests.post(f'{url_server}/{route_model}', data=json.dumps(payload), headers=headers)
-    return response.json()
+def ask_model(url_server: str, route_check:str, route_model: str, question: str, context: str):
+    if server_is_online(url_server, route_check):
+        payload = {'question': question, 'context': context}
+        headers = {'content-type': 'application/json'}
+        response = requests.post(f'{url_server}/{route_model}', data=json.dumps(payload), headers=headers)
+        response = response.json()
+        answer = response['answer'][0]['generated_text'].split('<|im_start|>assistant')[1].lstrip()
+        return answer
+    else:
+        return "LLM ist offline!"
 
 
 st.write("""
 # Frag  LeoLM!
 """)
-   
-if st.button('Check Server'):
-    with st.spinner('Moment...'):
-        if server_is_online(url_server, route_check):
-            st.success('LLM ist online!', icon="✅")
-        else:
-            st.warning('LLM ist offline!', icon="⚠️")
 
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-# Input --------------------------------
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
+if prompt := st.chat_input("Eingabe..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
 
-# Context -----------------------------
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-# option = st.selectbox(
-#     'Zu welchem Inhalt möchtest du eine Frage stellen?',
-#     ('Kein Kontext', 'Freitext'))
+    with st.chat_message("assistant"):
+        message_placeholder = st.empty()
+        full_response = ""
+        context = None
+        assistant_response = answer = ask_model(url_server, route_check, route_model, prompt, context)
 
-context = None
+        for chunk in assistant_response.split():
+            full_response += chunk + " "
+            time.sleep(0.15)
+            message_placeholder.markdown(full_response + "▌")
+        message_placeholder.markdown(full_response)
 
-# if option == 'Freitext':
-#     context = st.text_area(
-#     "Kontext",
-#     "",
-#     )
-
-# Question -------------------------------------------
-
-question = st.text_area(
-    "Frage",
-    "",
-    )
-
-if st.button('Stelle Frage'):
-    if server_is_online(url_server, route_check):
-      if question != "":
-          with st.spinner('LLM denkt...'):
-              result = ask_model(url_server, route_model, question, context)
-              answer = result['answer'][0]['generated_text'].split('<|im_start|>assistant')[1]
-              st.text_area(f'Antwort (dauerte {result["inference_time_seconds"]:.2f} Sekunden)', answer, height=250)
-    else:
-      st.warning('LLM ist offline, keine Antwort möglich!', icon="⚠️")
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
+    
