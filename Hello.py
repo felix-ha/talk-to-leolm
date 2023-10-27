@@ -22,16 +22,17 @@ def server_is_online(url_server: str, route_check:str) -> bool:
     except requests.exceptions.ConnectionError:
       return False
     
-def ask_model(url_server: str, route_check:str, route_model: str, question: str, context: str):
+def ask_model(url_server: str, route_check:str, route_model: str, question: str, context: str, prompt_history: str):
     if server_is_online(url_server, route_check):
-        payload = {'question': question, 'context': context}
+        payload = {'question': question, 'context': context, 'prompt': prompt_history}
         headers = {'content-type': 'application/json'}
         response = requests.post(f'{url_server}/{route_model}', data=json.dumps(payload), headers=headers)
         response = response.json()
-        answer = response['answer'][0]['generated_text'].split('<|im_start|>assistant')[1].lstrip()
-        return answer
+        prompt_history = response['answer'][0]['generated_text']
+        answer = prompt_history.split('<|im_start|>assistant')[1].lstrip()
+        return answer, prompt_history
     else:
-        return "LLM ist offline!"
+        return "LLM ist offline!", None
 
 
 st.write("""
@@ -55,13 +56,16 @@ if prompt := st.chat_input("Eingabe..."):
         message_placeholder = st.empty()
         full_response = ""
         context = None
-        assistant_response = answer = ask_model(url_server, route_check, route_model, prompt, context)
+        prompt_history = None
+        if len(st.session_state.messages) > 2:
+            prompt_history = st.session_state.messages[-2]['promt_history']
+        assistant_response, prompt_history = ask_model(url_server, route_check, route_model, prompt, context, prompt_history)
 
         for chunk in assistant_response.split():
             full_response += chunk + " "
-            time.sleep(0.15)
+            time.sleep(0.1)
             message_placeholder.markdown(full_response + "▌")
         message_placeholder.markdown(full_response)
 
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
-    
+    st.session_state.messages.append({"role": "assistant", "content": full_response, "promt_history": prompt_history})
+    print(st.session_state.messages)
