@@ -34,7 +34,7 @@ st.write("""
 """)
    
 if st.button('Check Server'):
-    with st.spinner('Wait for it...'):
+    with st.spinner('Moment...'):
         if server_is_online(url_server, route_check):
             st.success('LLM ist online!', icon="✅")
         else:
