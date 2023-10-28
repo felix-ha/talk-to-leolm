@@ -66,7 +66,7 @@ with tempfile.TemporaryDirectory() as tmpdir:
     ('Freie Frage', 'Frage zu einem Dokument'))
 
     if option == 'Frage zu einem Dokument':
-        files = st.file_uploader("File upload", type=["txt", "pdf"], accept_multiple_files=True)
+        files = st.file_uploader("File upload", type=["txt"], accept_multiple_files=True)
 
         if len(files) == 0:
             st.info("Keine Datei ausgewählt.")
