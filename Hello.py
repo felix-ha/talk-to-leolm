@@ -37,8 +37,7 @@ def ask_model(url_server: str, route_check:str, route_model: str, question: str,
                 response = requests.post(f'{url_server}/{route_model}', files=file, data=payload)
                 response = response.json()
         else:
-            headers = {'content-type': 'application/json'}
-            response = requests.post(f'{url_server}/{route_model}', data=json.dumps(payload), headers=headers)
+            response = requests.post(f'{url_server}/{route_model}', data=payload)
             response = response.json()
 
         prompt_history = response['answer'][0]['generated_text']
